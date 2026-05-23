@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"io/fs"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -82,9 +83,25 @@ func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterf
 	protected.PUT("/settings", h.UpdateSettings)
 	protected.POST("/settings/api-token/rotate", h.RotateAPIToken)
 
-	// Frontend — serve embedded web/dist
+	// Frontend — SPA fallback: serve real files, fall back to index.html for React Router paths.
+	// fs.FS.Open requires paths without a leading slash, so we strip it for the existence check.
 	if webFS != nil {
-		s.engine.NoRoute(gin.WrapH(http.FileServer(http.FS(webFS))))
+		fileServer := http.FileServer(http.FS(webFS))
+		s.engine.NoRoute(func(c *gin.Context) {
+			fsPath := strings.TrimPrefix(c.Request.URL.Path, "/")
+			if fsPath == "" {
+				fsPath = "index.html"
+			}
+			f, err := webFS.Open(fsPath)
+			if err == nil {
+				f.Close()
+				fileServer.ServeHTTP(c.Writer, c.Request)
+				return
+			}
+			// Not a real file — serve index.html so React Router handles the path
+			c.Request.URL.Path = "/"
+			fileServer.ServeHTTP(c.Writer, c.Request)
+		})
 	}
 
 	return s
