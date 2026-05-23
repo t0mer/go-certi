@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/spf13/pflag"
@@ -83,13 +84,11 @@ func main() {
 		slog.Error("config", "err", err)
 		os.Exit(1)
 	}
-	if *port != 8111 { // respect explicit port override from flag/env
-		cfg.Port = *port
-	}
+	cfg.Port = *port
 	_ = sslmateKey // stored to DB settings in a later plan
 
 	// --- Open database ---
-	dbConn, err := db.Open(*confDir + "/go-certi.db")
+	dbConn, err := db.Open(filepath.Join(*confDir, "go-certi.db"))
 	if err != nil {
 		slog.Error("database", "err", err)
 		os.Exit(1)
