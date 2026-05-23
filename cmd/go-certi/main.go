@@ -11,8 +11,10 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/t0mer/go-certi/internal/api"
+	"github.com/t0mer/go-certi/internal/auth"
 	"github.com/t0mer/go-certi/internal/config"
 	"github.com/t0mer/go-certi/internal/db"
+	"github.com/t0mer/go-certi/internal/models"
 	"github.com/t0mer/go-certi/internal/version"
 	webui "github.com/t0mer/go-certi/web"
 )
@@ -95,8 +97,11 @@ func main() {
 	}
 	defer dbConn.Close()
 
+	q := models.New(dbConn)
+	authSvc := auth.New("go-certi-jwt-secret") // TODO: load from settings/env
+
 	// --- Start HTTP server ---
-	srv := api.New(dbConn, webui.FS())
+	srv := api.New(dbConn, q, authSvc, nil, nil, webui.FS())
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	slog.Info("go-certi starting", "version", version.Version, "addr", addr, "conf", *confDir)
 

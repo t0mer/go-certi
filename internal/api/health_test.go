@@ -10,7 +10,9 @@ import (
 	_ "modernc.org/sqlite"
 
 	"github.com/t0mer/go-certi/internal/api"
+	"github.com/t0mer/go-certi/internal/auth"
 	"github.com/t0mer/go-certi/internal/db"
+	"github.com/t0mer/go-certi/internal/models"
 )
 
 func openTestDB(t *testing.T) *sql.DB {
@@ -25,7 +27,7 @@ func openTestDB(t *testing.T) *sql.DB {
 
 func TestHealthz(t *testing.T) {
 	conn := openTestDB(t)
-	srv := api.New(conn, nil)
+	srv := api.New(conn, models.New(conn), auth.New("test-secret"), nil, nil, nil)
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
@@ -38,7 +40,7 @@ func TestHealthz(t *testing.T) {
 
 func TestReadyz_WithDB(t *testing.T) {
 	conn := openTestDB(t)
-	srv := api.New(conn, nil)
+	srv := api.New(conn, models.New(conn), auth.New("test-secret"), nil, nil, nil)
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
@@ -53,7 +55,7 @@ func TestReadyz_ClosedDB(t *testing.T) {
 	conn := openTestDB(t)
 	conn.Close() // force PingContext to fail
 
-	srv := api.New(conn, nil)
+	srv := api.New(conn, models.New(conn), auth.New("test-secret"), nil, nil, nil)
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
