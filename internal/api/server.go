@@ -6,8 +6,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/t0mer/go-certi/internal/auth"
 	"github.com/t0mer/go-certi/internal/models"
+
+	_ "github.com/t0mer/go-certi/docs"
 )
 
 // Server holds the Gin engine and shared dependencies.
@@ -29,8 +33,8 @@ func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterf
 	s.engine.GET("/healthz", s.healthz)
 	s.engine.GET("/readyz", s.readyz)
 
-	// Swagger UI — added after swag init in Task 5
-	// s.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Swagger UI
+	s.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1
 	api := s.engine.Group("/api/v1")

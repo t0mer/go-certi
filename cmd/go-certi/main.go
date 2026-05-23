@@ -1,8 +1,20 @@
+// @title           go-certi API
+// @version         1.0
+// @description     SSL Certificate Transparency monitor — REST API
+// @host            localhost:8111
+// @BasePath        /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in              header
+// @name            Authorization
+// @description     JWT token or opaque API token: "Bearer <token>"
+
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -74,12 +86,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	// --- Placeholder actions (implemented in auth plan) ---
-	if *resetPwd || *resetToken {
-		slog.Error("--reset-password and --reset-api-token not yet implemented")
-		os.Exit(1)
-	}
-
 	// --- Load or create config ---
 	cfg, err := config.LoadOrCreate(*confDir)
 	if err != nil {
@@ -100,6 +106,53 @@ func main() {
 	q := models.New(dbConn)
 	authSvc := auth.New("go-certi-jwt-secret") // TODO: load from settings/env
 
+	// --- Reset password ---
+	if *resetPwd {
+		newPwd := generateRandomString(16)
+		hash, err := authSvc.HashPassword(newPwd)
+		if err != nil {
+			slog.Error("hash password", "err", err)
+			os.Exit(1)
+		}
+		existing, _ := q.GetSettings(context.Background())
+		q.UpdateSettings(context.Background(), models.UpdateSettingsParams{ //nolint:errcheck
+			AuthEnabled:               true,
+			Username:                  existing.Username,
+			PasswordHash:              &hash,
+			ApiTokenProtectionEnabled: existing.ApiTokenProtectionEnabled,
+			ApiToken:                  existing.ApiToken,
+			Theme:                     existing.Theme,
+			SslmateApiKey:             existing.SslmateApiKey,
+			DefaultScheduleID:         existing.DefaultScheduleID,
+		})
+		fmt.Printf("New password: %s\n", newPwd)
+		slog.Warn("password reset via CLI")
+		os.Exit(0)
+	}
+
+	// --- Reset API token ---
+	if *resetToken {
+		tok, err := authSvc.GenerateAPIToken()
+		if err != nil {
+			slog.Error("generate token", "err", err)
+			os.Exit(1)
+		}
+		existing, _ := q.GetSettings(context.Background())
+		q.UpdateSettings(context.Background(), models.UpdateSettingsParams{ //nolint:errcheck
+			AuthEnabled:               existing.AuthEnabled,
+			Username:                  existing.Username,
+			PasswordHash:              existing.PasswordHash,
+			ApiTokenProtectionEnabled: true,
+			ApiToken:                  &tok,
+			Theme:                     existing.Theme,
+			SslmateApiKey:             existing.SslmateApiKey,
+			DefaultScheduleID:         existing.DefaultScheduleID,
+		})
+		fmt.Printf("New API token: %s\n", tok)
+		slog.Warn("API token reset via CLI")
+		os.Exit(0)
+	}
+
 	// --- Start HTTP server ---
 	srv := api.New(dbConn, q, authSvc, nil, nil, webui.FS())
 	addr := fmt.Sprintf(":%d", cfg.Port)
@@ -109,4 +162,13 @@ func main() {
 		slog.Error("server", "err", err)
 		os.Exit(1)
 	}
+}
+
+func generateRandomString(n int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(b)
 }
