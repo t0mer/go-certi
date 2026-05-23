@@ -1,0 +1,16 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "internal/db/queries/"
+    schema: "internal/db/migrations/"
+    gen:
+      go:
+        package: "models"
+        out: "internal/models"
+        emit_json_tags: true
+        emit_pointers_for_null_types: true
+        overrides:
+          - db_type: "BOOLEAN"
+            go_type: "bool"
+          - db_type: "boolean"
+            go_type: "bool"
