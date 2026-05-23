@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"io/fs"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -88,22 +87,22 @@ func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterf
 	protected.GET("/updates/status", h.GetUpdateStatus)
 	protected.POST("/updates/apply", h.ApplyUpdate)
 
-	// Frontend — SPA fallback: serve real files, fall back to index.html for React Router paths.
-	// fs.FS.Open requires paths without a leading slash, so we strip it for the existence check.
+	// Frontend static assets + SPA fallback.
+	// /assets/* is registered as an explicit route so the file server always
+	// handles it and Go's mime detection sets the correct Content-Type.
+	// Relying on NoRoute for asset requests caused the file server to fall
+	// through to the SPA fallback and return index.html with text/html,
+	// which browsers reject for <script type="module">.
 	if webFS != nil {
 		fileServer := http.FileServer(http.FS(webFS))
+
+		s.engine.GET("/assets/*filepath", func(c *gin.Context) {
+			fileServer.ServeHTTP(c.Writer, c.Request)
+		})
+
+		// SPA fallback: all unmatched routes (including /) serve index.html
+		// so React Router can handle client-side navigation.
 		s.engine.NoRoute(func(c *gin.Context) {
-			fsPath := strings.TrimPrefix(c.Request.URL.Path, "/")
-			if fsPath == "" {
-				fsPath = "index.html"
-			}
-			f, err := webFS.Open(fsPath)
-			if err == nil {
-				f.Close()
-				fileServer.ServeHTTP(c.Writer, c.Request)
-				return
-			}
-			// Not a real file — serve index.html so React Router handles the path
 			c.Request.URL.Path = "/"
 			fileServer.ServeHTTP(c.Writer, c.Request)
 		})
