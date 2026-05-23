@@ -46,13 +46,21 @@ func runMigrations(conn *sql.DB, migrations fs.FS) error {
 			return fmt.Errorf("read migration %s: %w", name, err)
 		}
 
-		if _, err := conn.Exec(string(data)); err != nil {
+		tx, err := conn.Begin()
+		if err != nil {
+			return fmt.Errorf("begin tx for %s: %w", name, err)
+		}
+
+		if _, err := tx.Exec(string(data)); err != nil {
+			tx.Rollback()
 			return fmt.Errorf("apply migration %s: %w", name, err)
 		}
-		if _, err := conn.Exec(
-			"INSERT INTO schema_migrations (version) VALUES (?)", name,
-		); err != nil {
+		if _, err := tx.Exec("INSERT INTO schema_migrations (version) VALUES (?)", name); err != nil {
+			tx.Rollback()
 			return fmt.Errorf("record migration %s: %w", name, err)
+		}
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit migration %s: %w", name, err)
 		}
 	}
 	return nil
