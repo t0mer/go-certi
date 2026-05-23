@@ -32,6 +32,7 @@ import (
 	"github.com/t0mer/go-certi/internal/notify"
 	"github.com/t0mer/go-certi/internal/scanner"
 	"github.com/t0mer/go-certi/internal/scheduler"
+	"github.com/t0mer/go-certi/internal/updater"
 	"github.com/t0mer/go-certi/internal/version"
 	webui "github.com/t0mer/go-certi/web"
 )
@@ -186,7 +187,8 @@ func main() {
 	defer sched.Stop()
 
 	// --- Start HTTP server (wrapped in service framework) ---
-	srv := api.New(dbConn, q, authSvc, scn, notifier, webui.FS())
+	upd := updater.New()
+	srv := api.New(dbConn, q, authSvc, scn, notifier, upd, webui.FS())
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	httpSrv := &http.Server{Addr: addr, Handler: srv}
 

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
+import { UpdateBanner } from '@/components/UpdateBanner'
 import Dashboard from '@/pages/Dashboard'
 import FQDNsPage from '@/pages/FQDNs'
 import Certificates from '@/pages/Certificates'
@@ -11,6 +12,7 @@ import Login from '@/pages/Login'
 export default function App() {
   return (
     <BrowserRouter>
+      <UpdateBanner />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<Layout />}>
