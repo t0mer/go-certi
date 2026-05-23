@@ -19,14 +19,19 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/spf13/pflag"
 
 	"github.com/t0mer/go-certi/internal/api"
 	"github.com/t0mer/go-certi/internal/auth"
 	"github.com/t0mer/go-certi/internal/config"
+	"github.com/t0mer/go-certi/internal/ct"
 	"github.com/t0mer/go-certi/internal/db"
 	"github.com/t0mer/go-certi/internal/models"
+	"github.com/t0mer/go-certi/internal/notify"
+	"github.com/t0mer/go-certi/internal/scanner"
+	"github.com/t0mer/go-certi/internal/scheduler"
 	"github.com/t0mer/go-certi/internal/version"
 	webui "github.com/t0mer/go-certi/web"
 )
@@ -93,7 +98,6 @@ func main() {
 		os.Exit(1)
 	}
 	cfg.Port = *port
-	_ = sslmateKey // stored to DB settings in a later plan
 
 	// --- Open database ---
 	dbConn, err := db.Open(filepath.Join(*confDir, "go-certi.db"))
@@ -107,6 +111,7 @@ func main() {
 	authSvc := auth.New("go-certi-jwt-secret") // TODO: load from settings/env
 
 	// --- Reset password ---
+
 	if *resetPwd {
 		newPwd := generateRandomString(16)
 		hash, err := authSvc.HashPassword(newPwd)
@@ -153,8 +158,21 @@ func main() {
 		os.Exit(0)
 	}
 
+	// --- Wire CT, notify, scanner, scheduler ---
+	ctClient := ct.New(*sslmateKey)
+	notifier := notify.New()
+	scn := scanner.New(q, ctClient, notifier)
+	sched := scheduler.New(q, scn)
+
+	startCtx, startCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := sched.Start(startCtx); err != nil {
+		slog.Warn("scheduler start warning", "err", err)
+	}
+	startCancel()
+	defer sched.Stop()
+
 	// --- Start HTTP server ---
-	srv := api.New(dbConn, q, authSvc, nil, nil, webui.FS())
+	srv := api.New(dbConn, q, authSvc, scn, notifier, webui.FS())
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	slog.Info("go-certi starting", "version", version.Version, "addr", addr, "conf", *confDir)
 
