@@ -48,3 +48,18 @@ func TestReadyz_WithDB(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 }
+
+func TestReadyz_ClosedDB(t *testing.T) {
+	conn := openTestDB(t)
+	conn.Close() // force PingContext to fail
+
+	srv := api.New(conn, nil)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
+	srv.ServeHTTP(w, req)
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503, got %d", w.Code)
+	}
+}
