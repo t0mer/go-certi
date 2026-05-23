@@ -1,0 +1,24 @@
+services:
+  go-certi:
+    build:
+      context: .
+      args:
+        VERSION: dev
+    ports:
+      - "8111:8111"
+    volumes:
+      - go-certi-data:/data
+    environment:
+      # Uncomment and set these as needed:
+      # GO_CERTI_SSLMATE_API_KEY: "your-key-here"
+      GO_CERTI_CONF: /data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/go-certi", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  go-certi-data:
