@@ -12,13 +12,19 @@ go-certi watches [Certificate Transparency](https://certificate.transparency.dev
 
 ## Features
 
-- **CT Log Monitoring** — Fetches certificates from [sslmate Cert Spotter](https://sslmate.com/ct_search_api/) (primary) with [crt.sh](https://crt.sh) as fallback. Supports anonymous access; optional API key unlocks higher rate limits.
-- **Scheduler** — Per-domain or global cron-based scan schedule (e.g. `@every 2h`, `@daily`, standard cron expressions).
-- **Notifications** — Pluggable notification channels:
+- **CT Log Monitoring** — Fetches certificates from [sslmate Cert Spotter](https://sslmate.com/ct_search_api/) (primary) with [crt.sh](https://crt.sh) as fallback. Supports anonymous access; an optional API key unlocks higher rate limits.
+- **Scheduler** — Per-domain or global cron-based scan schedule (`@every 2h`, `@daily`, standard cron expressions, etc.).
+- **Configurable Notification Events** — Choose which events trigger alerts per domain:
+  - 🆕 **New certificate issued** — fires when a previously unseen certificate appears in CT logs
+  - ⏳ **Expiring soon** — fires when a cert will expire within a configurable number of days (default: 10)
+  - ❌ **Expired** — fires when a cert has passed its expiry date
+  - 🚫 **Revoked** — fires when a cert is marked as revoked in the CT log
+  - 🔄 **CA changed** — fires when a newly issued cert comes from a different Certificate Authority than the previous one
+- **Notification Channels** — Pluggable, reusable targets that multiple domains can share:
   - 🔔 **Shoutrrr** — Telegram, Slack, Discord, email, and [30+ more services](https://containrrr.dev/shoutrrr/services/)
   - 💬 **GreenAPI** — WhatsApp via [green-api.com](https://green-api.com)
   - 💬 **WaWeb** — WhatsApp via [go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice)
-- **Certificate Details** — Stores CN, SANs, issuer (friendly name + full DN), issue date, expiry date, revocation status, and source.
+- **Certificate Details** — Stores and displays CN, SANs, issuer (friendly name + full DN), issue date, expiry date with countdown, revocation status, and CT source.
 - **Web UI** — Mobile-first React + Tailwind UI with light/dark/system theme. All data accessible without any tooling.
 - **REST API** — Full OpenAPI 3 / Swagger spec at `/swagger/index.html`.
 - **Auth** — Optional UI login (JWT, bcrypt) and optional API token protection. Both off by default for homelab use.
@@ -38,9 +44,16 @@ Overview of monitored FQDNs, total certificates discovered, notification channel
 ---
 
 ### FQDNs
-Add domains to monitor. Enable/disable monitoring per domain, toggle notifications, trigger an immediate scan, or remove a domain.
+Monitor multiple domains. Each domain shows the number of configured channels and active notification events. Click ⚙ to open the configuration panel, where you can select notification channels and choose which events trigger alerts.
 
 ![FQDNs](docs/screenshots/fqdns.png)
+
+---
+
+### FQDN Notification Configuration
+Click the ⚙ gear button on any FQDN to configure:
+- **Channels** — select which notification channels to use for this domain
+- **Notify on** — choose any combination of: New certificate, Expiring soon (with configurable day threshold), Expired, Revoked, CA changed
 
 ---
 
@@ -52,7 +65,7 @@ Paginated list of all discovered certificates. Shows subject CN, issuer (friendl
 ---
 
 ### Notification Channels
-Configure reusable notification targets. Supports Shoutrrr (Telegram, Slack, …), GreenAPI (WhatsApp), and WaWeb (WhatsApp). Each channel has a **Test** button to verify delivery.
+Create and manage reusable notification channels. Each channel has a **Test** button to verify delivery, and a **✏ Edit** button to update the name or configuration at any time.
 
 ![Channels](docs/screenshots/channels.png)
 
@@ -167,6 +180,24 @@ Config and the SQLite database are stored in the `--conf` directory:
 
 ---
 
+## Notification Events
+
+Each FQDN can be configured to fire notifications on any combination of events:
+
+| Event | Description | Dedup window |
+|---|---|---|
+| `new_cert` | A certificate not previously seen has appeared in CT logs | Per-cert (fires once per new cert) |
+| `expiring_soon` | A cert will expire within the configured threshold | 24 hours per cert |
+| `expired` | A cert has passed its `not_after` date | 24 hours per cert |
+| `revoked` | A cert is marked revoked | 24 hours per cert |
+| `ca_changed` | A new cert uses a different Certificate Authority than the previous one | 24 hours per cert |
+
+The expiry threshold (default: **10 days**) is configurable per domain from the ⚙ panel.
+
+Notifications are **best-effort** — a failing channel is logged and never blocks a scan or takes down the scheduler.
+
+---
+
 ## Notification Channel Config
 
 ### Shoutrrr (Telegram, Slack, Discord, email, and more)
@@ -227,6 +258,19 @@ Full interactive documentation is available at `/swagger/index.html`.
 | `GET` | `/healthz` | Liveness probe (no auth, always 200) |
 | `GET` | `/readyz` | Readiness probe (DB ping) |
 
+### FQDN fields
+
+| Field | Type | Description |
+|---|---|---|
+| `fqdn` | string | Domain name to monitor |
+| `include_subdomains` | bool | Also scan `*.domain` |
+| `enabled` | bool | Pause/resume monitoring |
+| `notifications_enabled` | bool | Master toggle for all notifications |
+| `channel_ids` | []string | IDs of notification channels to use |
+| `notification_events` | []string | Events to notify on (see table above) |
+| `expiry_threshold_days` | int | Days before expiry to trigger `expiring_soon` |
+| `schedule_id` | string? | Override the global default scan schedule |
+
 ### Authentication
 
 When **API Token Protection** is enabled, pass the token as a Bearer header:
@@ -274,6 +318,12 @@ go test ./... -race
 
 ```bash
 go tool swag init -g cmd/go-certi/main.go -d .,internal/api -o docs/
+```
+
+### Regenerate DB query code
+
+```bash
+go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate
 ```
 
 ---

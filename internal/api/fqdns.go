@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -19,6 +20,10 @@ func (h *Handler) buildFQDNResponse(c *gin.Context, f models.Fqdn) (FQDNResponse
 	for i, id := range channelIDs {
 		ids[i] = id
 	}
+	var notifEvents []string
+	if err := json.Unmarshal([]byte(f.NotificationEvents), &notifEvents); err != nil || notifEvents == nil {
+		notifEvents = []string{"new_cert"}
+	}
 	return FQDNResponse{
 		ID:                   f.ID,
 		FQDN:                 f.Fqdn,
@@ -27,6 +32,8 @@ func (h *Handler) buildFQDNResponse(c *gin.Context, f models.Fqdn) (FQDNResponse
 		NotificationsEnabled: f.NotificationsEnabled,
 		ScheduleID:           f.ScheduleID,
 		ChannelIDs:           ids,
+		NotificationEvents:   notifEvents,
+		ExpiryThresholdDays:  int(f.ExpiryThresholdDays),
 		CreatedAt:            f.CreatedAt,
 		UpdatedAt:            f.UpdatedAt,
 	}, nil
@@ -96,6 +103,16 @@ func (h *Handler) CreateFQDN(c *gin.Context) {
 		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	eventsJSON := `["new_cert"]`
+	if len(req.NotificationEvents) > 0 {
+		if b, err := json.Marshal(req.NotificationEvents); err == nil {
+			eventsJSON = string(b)
+		}
+	}
+	threshold := 10
+	if req.ExpiryThresholdDays != nil {
+		threshold = *req.ExpiryThresholdDays
+	}
 	f, err := h.q.CreateFQDN(c.Request.Context(), models.CreateFQDNParams{
 		ID:                   uuid.NewString(),
 		Fqdn:                 req.FQDN,
@@ -103,6 +120,8 @@ func (h *Handler) CreateFQDN(c *gin.Context) {
 		Enabled:              isTrue(req.Enabled, true),
 		NotificationsEnabled: isTrue(req.NotificationsEnabled, true),
 		ScheduleID:           req.ScheduleID,
+		NotificationEvents:   eventsJSON,
+		ExpiryThresholdDays:  int64(threshold),
 	})
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, err.Error())
@@ -134,12 +153,24 @@ func (h *Handler) UpdateFQDN(c *gin.Context) {
 		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	updateEventsJSON := `["new_cert"]`
+	if len(req.NotificationEvents) > 0 {
+		if b, err := json.Marshal(req.NotificationEvents); err == nil {
+			updateEventsJSON = string(b)
+		}
+	}
+	updateThreshold := req.ExpiryThresholdDays
+	if updateThreshold <= 0 {
+		updateThreshold = 10
+	}
 	f, err := h.q.UpdateFQDN(c.Request.Context(), models.UpdateFQDNParams{
 		Fqdn:                 req.FQDN,
 		IncludeSubdomains:    req.IncludeSubdomains,
 		Enabled:              req.Enabled,
 		NotificationsEnabled: req.NotificationsEnabled,
 		ScheduleID:           req.ScheduleID,
+		NotificationEvents:   updateEventsJSON,
+		ExpiryThresholdDays:  int64(updateThreshold),
 		ID:                   c.Param("id"),
 	})
 	if err != nil {

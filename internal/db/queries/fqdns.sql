@@ -8,8 +8,8 @@ SELECT * FROM fqdns WHERE id = ?;
 SELECT * FROM fqdns WHERE fqdn = ?;
 
 -- name: CreateFQDN :one
-INSERT INTO fqdns (id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO fqdns (id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, notification_events, expiry_threshold_days)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: UpdateFQDN :one
@@ -19,6 +19,8 @@ SET fqdn                  = ?,
     enabled               = ?,
     notifications_enabled = ?,
     schedule_id           = ?,
+    notification_events   = ?,
+    expiry_threshold_days = ?,
     updated_at            = strftime('%Y-%m-%dT%H:%M:%SZ','now')
 WHERE id = ?
 RETURNING *;

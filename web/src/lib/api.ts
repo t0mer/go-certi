@@ -17,6 +17,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export interface FQDN {
   id: string; fqdn: string; include_subdomains: boolean; enabled: boolean
   notifications_enabled: boolean; schedule_id: string | null; channel_ids: string[]
+  notification_events: string[]; expiry_threshold_days: number
   created_at: string; updated_at: string
 }
 export interface Certificate {
@@ -42,7 +43,7 @@ export const api = {
     list: () => request<FQDN[]>('/fqdns'),
     get: (id: string) => request<FQDN>(`/fqdns/${id}`),
     create: (body: Partial<FQDN> & { fqdn: string }) => request<FQDN>('/fqdns', { method: 'POST', body: JSON.stringify(body) }),
-    update: (id: string, body: Partial<FQDN>) => request<FQDN>(`/fqdns/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    update: (id: string, body: Partial<FQDN> & { fqdn: string }) => request<FQDN>(`/fqdns/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     delete: (id: string) => request<void>(`/fqdns/${id}`, { method: 'DELETE' }),
     scan: (id: string) => request<void>(`/fqdns/${id}/scan`, { method: 'POST' }),
   },

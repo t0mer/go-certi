@@ -10,9 +10,9 @@ import (
 )
 
 const createFQDN = `-- name: CreateFQDN :one
-INSERT INTO fqdns (id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id)
-VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at
+INSERT INTO fqdns (id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, notification_events, expiry_threshold_days)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at, notification_events, expiry_threshold_days
 `
 
 type CreateFQDNParams struct {
@@ -22,6 +22,8 @@ type CreateFQDNParams struct {
 	Enabled              bool    `json:"enabled"`
 	NotificationsEnabled bool    `json:"notifications_enabled"`
 	ScheduleID           *string `json:"schedule_id"`
+	NotificationEvents   string  `json:"notification_events"`
+	ExpiryThresholdDays  int64   `json:"expiry_threshold_days"`
 }
 
 func (q *Queries) CreateFQDN(ctx context.Context, arg CreateFQDNParams) (Fqdn, error) {
@@ -32,6 +34,8 @@ func (q *Queries) CreateFQDN(ctx context.Context, arg CreateFQDNParams) (Fqdn, e
 		arg.Enabled,
 		arg.NotificationsEnabled,
 		arg.ScheduleID,
+		arg.NotificationEvents,
+		arg.ExpiryThresholdDays,
 	)
 	var i Fqdn
 	err := row.Scan(
@@ -43,6 +47,8 @@ func (q *Queries) CreateFQDN(ctx context.Context, arg CreateFQDNParams) (Fqdn, e
 		&i.ScheduleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.NotificationEvents,
+		&i.ExpiryThresholdDays,
 	)
 	return i, err
 }
@@ -57,7 +63,7 @@ func (q *Queries) DeleteFQDN(ctx context.Context, id string) error {
 }
 
 const getFQDN = `-- name: GetFQDN :one
-SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at FROM fqdns WHERE id = ?
+SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at, notification_events, expiry_threshold_days FROM fqdns WHERE id = ?
 `
 
 func (q *Queries) GetFQDN(ctx context.Context, id string) (Fqdn, error) {
@@ -72,12 +78,14 @@ func (q *Queries) GetFQDN(ctx context.Context, id string) (Fqdn, error) {
 		&i.ScheduleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.NotificationEvents,
+		&i.ExpiryThresholdDays,
 	)
 	return i, err
 }
 
 const getFQDNByName = `-- name: GetFQDNByName :one
-SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at FROM fqdns WHERE fqdn = ?
+SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at, notification_events, expiry_threshold_days FROM fqdns WHERE fqdn = ?
 `
 
 func (q *Queries) GetFQDNByName(ctx context.Context, fqdn string) (Fqdn, error) {
@@ -92,12 +100,14 @@ func (q *Queries) GetFQDNByName(ctx context.Context, fqdn string) (Fqdn, error) 
 		&i.ScheduleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.NotificationEvents,
+		&i.ExpiryThresholdDays,
 	)
 	return i, err
 }
 
 const listEnabledFQDNs = `-- name: ListEnabledFQDNs :many
-SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at FROM fqdns WHERE enabled = 1 ORDER BY fqdn
+SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at, notification_events, expiry_threshold_days FROM fqdns WHERE enabled = 1 ORDER BY fqdn
 `
 
 func (q *Queries) ListEnabledFQDNs(ctx context.Context) ([]Fqdn, error) {
@@ -118,6 +128,8 @@ func (q *Queries) ListEnabledFQDNs(ctx context.Context) ([]Fqdn, error) {
 			&i.ScheduleID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.NotificationEvents,
+			&i.ExpiryThresholdDays,
 		); err != nil {
 			return nil, err
 		}
@@ -133,7 +145,7 @@ func (q *Queries) ListEnabledFQDNs(ctx context.Context) ([]Fqdn, error) {
 }
 
 const listFQDNs = `-- name: ListFQDNs :many
-SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at FROM fqdns ORDER BY fqdn
+SELECT id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at, notification_events, expiry_threshold_days FROM fqdns ORDER BY fqdn
 `
 
 func (q *Queries) ListFQDNs(ctx context.Context) ([]Fqdn, error) {
@@ -154,6 +166,8 @@ func (q *Queries) ListFQDNs(ctx context.Context) ([]Fqdn, error) {
 			&i.ScheduleID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.NotificationEvents,
+			&i.ExpiryThresholdDays,
 		); err != nil {
 			return nil, err
 		}
@@ -175,9 +189,11 @@ SET fqdn                  = ?,
     enabled               = ?,
     notifications_enabled = ?,
     schedule_id           = ?,
+    notification_events   = ?,
+    expiry_threshold_days = ?,
     updated_at            = strftime('%Y-%m-%dT%H:%M:%SZ','now')
 WHERE id = ?
-RETURNING id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at
+RETURNING id, fqdn, include_subdomains, enabled, notifications_enabled, schedule_id, created_at, updated_at, notification_events, expiry_threshold_days
 `
 
 type UpdateFQDNParams struct {
@@ -186,6 +202,8 @@ type UpdateFQDNParams struct {
 	Enabled              bool    `json:"enabled"`
 	NotificationsEnabled bool    `json:"notifications_enabled"`
 	ScheduleID           *string `json:"schedule_id"`
+	NotificationEvents   string  `json:"notification_events"`
+	ExpiryThresholdDays  int64   `json:"expiry_threshold_days"`
 	ID                   string  `json:"id"`
 }
 
@@ -196,6 +214,8 @@ func (q *Queries) UpdateFQDN(ctx context.Context, arg UpdateFQDNParams) (Fqdn, e
 		arg.Enabled,
 		arg.NotificationsEnabled,
 		arg.ScheduleID,
+		arg.NotificationEvents,
+		arg.ExpiryThresholdDays,
 		arg.ID,
 	)
 	var i Fqdn
@@ -208,6 +228,8 @@ func (q *Queries) UpdateFQDN(ctx context.Context, arg UpdateFQDNParams) (Fqdn, e
 		&i.ScheduleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.NotificationEvents,
+		&i.ExpiryThresholdDays,
 	)
 	return i, err
 }

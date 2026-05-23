@@ -9,6 +9,8 @@ type CreateFQDNRequest struct {
 	NotificationsEnabled *bool    `json:"notifications_enabled"`
 	ScheduleID           *string  `json:"schedule_id"`
 	ChannelIDs           []string `json:"channel_ids"`
+	NotificationEvents   []string `json:"notification_events"`
+	ExpiryThresholdDays  *int     `json:"expiry_threshold_days"`
 }
 
 type UpdateFQDNRequest struct {
@@ -18,6 +20,8 @@ type UpdateFQDNRequest struct {
 	NotificationsEnabled bool     `json:"notifications_enabled"`
 	ScheduleID           *string  `json:"schedule_id"`
 	ChannelIDs           []string `json:"channel_ids"`
+	NotificationEvents   []string `json:"notification_events"`
+	ExpiryThresholdDays  int      `json:"expiry_threshold_days"`
 }
 
 type FQDNResponse struct {
@@ -28,6 +32,8 @@ type FQDNResponse struct {
 	NotificationsEnabled bool     `json:"notifications_enabled"`
 	ScheduleID           *string  `json:"schedule_id"`
 	ChannelIDs           []string `json:"channel_ids"`
+	NotificationEvents   []string `json:"notification_events"`
+	ExpiryThresholdDays  int      `json:"expiry_threshold_days"`
 	CreatedAt            string   `json:"created_at"`
 	UpdatedAt            string   `json:"updated_at"`
 }
