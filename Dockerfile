@@ -1,9 +1,20 @@
 # syntax=docker/dockerfile:1
 
 # Stage 1: Build Go binary
-FROM golang:1.25-alpine AS go-builder
+# Uses golang:1.26-alpine to match the `go 1.26.0` directive in go.mod
+# (auto-bumped when sqlc was added as a tool dependency)
+FROM golang:1.26-alpine AS go-builder
 ARG VERSION=dev
 WORKDIR /src
+
+# git is needed by `go mod download` for VCS-tagged dependencies
+RUN apk add --no-cache git
+
+# Prevent toolchain auto-download under QEMU multi-arch builds, where
+# downloading a different Go toolchain is flaky. The base image already
+# provides a Go version that satisfies go.mod.
+ENV GOTOOLCHAIN=local
+
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
