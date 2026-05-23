@@ -158,6 +158,7 @@ All settings can be provided as CLI flags **or** environment variables. **Enviro
 | `--sslmate-api-key` | `GO_CERTI_SSLMATE_API_KEY` | _(none)_ | sslmate Cert Spotter API key |
 | `--reset-password` | `GO_CERTI_RESET_PASSWORD` | — | Generate a new password, print it, exit |
 | `--reset-api-token` | `GO_CERTI_RESET_API_TOKEN` | — | Generate a new API token, print it, exit |
+| `--service <action>` | `GO_CERTI_SERVICE` | — | Manage as a system service. See [Running as a System Service](#running-as-a-system-service) |
 | `--version` | — | — | Print version and exit |
 
 Config and the SQLite database are stored in the `--conf` directory:
@@ -177,6 +178,62 @@ Config and the SQLite database are stored in the `--conf` directory:
 # Reset the API token
 ./go-certi --conf /data --reset-api-token
 ```
+
+---
+
+## Running as a System Service
+
+go-certi can register itself as a native system service on Linux (systemd / SysV / Upstart), Windows (Service Control Manager), and macOS (launchd) via the `--service` flag. The service starts automatically on boot and restarts on failure.
+
+### Linux (systemd)
+
+```bash
+# Install — runs the binary at its current path with these args
+sudo ./go-certi --service install --conf /var/lib/go-certi --port 8111
+
+# Enable auto-start on boot
+sudo systemctl enable go-certi
+
+# Check status / logs
+sudo systemctl status go-certi
+sudo journalctl -u go-certi -f
+
+# Uninstall
+sudo ./go-certi --service uninstall
+```
+
+### Windows
+
+Open an **Administrator** PowerShell or CMD:
+
+```powershell
+# Install (uses the binary's current location)
+.\go-certi.exe --service install --conf C:\ProgramData\go-certi --port 8111
+
+# Status
+sc query go-certi
+
+# Uninstall
+.\go-certi.exe --service uninstall
+```
+
+### Supported `--service` actions
+
+| Action | Description |
+|---|---|
+| `install` | Register the service with the OS and start it. The current binary path and `--conf` / `--port` values are baked into the service definition. |
+| `uninstall` | Stop and remove the service. |
+| `start` | Start the service. |
+| `stop` | Stop the service. |
+| `restart` | Restart the service. |
+| `status` | Print whether the service is `running`, `stopped`, or `unknown`. |
+
+### Notes
+
+- **Move the binary first.** The service definition stores the absolute path of the binary at install time. Move or rename the binary and the service will break — uninstall and reinstall to fix.
+- **Permissions.** `install` and `uninstall` require **root** on Linux/macOS and **Administrator** on Windows.
+- **Service user.** Defaults to `root` on Linux/macOS and `LocalSystem` on Windows. To run as a different user, edit the unit file after install or pre-create one manually.
+- **Data directory.** Make sure the `--conf` path is absolute and writable by the service user. The directory is created on first run if it doesn't exist.
 
 ---
 

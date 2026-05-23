@@ -39,12 +39,13 @@ import (
 func main() {
 	// --- Flag definitions ---
 	var (
-		port        = pflag.IntP("port", "p", 8111, "Server port\n  env: GO_CERTI_PORT")
-		confDir     = pflag.String("conf", config.DefaultConfDir(), "Config + DB directory\n  env: GO_CERTI_CONF")
-		sslmateKey  = pflag.String("sslmate-api-key", "", "sslmate Cert Spotter API key\n  env: GO_CERTI_SSLMATE_API_KEY")
-		resetPwd    = pflag.Bool("reset-password", false, "Generate new password, print plaintext, exit\n  env: GO_CERTI_RESET_PASSWORD")
-		resetToken  = pflag.Bool("reset-api-token", false, "Generate new API token, print it, exit\n  env: GO_CERTI_RESET_API_TOKEN")
-		showVersion = pflag.Bool("version", false, "Print version and exit")
+		port          = pflag.IntP("port", "p", 8111, "Server port\n  env: GO_CERTI_PORT")
+		confDir       = pflag.String("conf", config.DefaultConfDir(), "Config + DB directory\n  env: GO_CERTI_CONF")
+		sslmateKey    = pflag.String("sslmate-api-key", "", "sslmate Cert Spotter API key\n  env: GO_CERTI_SSLMATE_API_KEY")
+		resetPwd      = pflag.Bool("reset-password", false, "Generate new password, print plaintext, exit\n  env: GO_CERTI_RESET_PASSWORD")
+		resetToken    = pflag.Bool("reset-api-token", false, "Generate new API token, print it, exit\n  env: GO_CERTI_RESET_API_TOKEN")
+		serviceAction = pflag.String("service", "", "Manage as a system service: install | uninstall | start | stop | restart | status\n  env: GO_CERTI_SERVICE")
+		showVersion   = pflag.Bool("version", false, "Print version and exit")
 	)
 
 	pflag.CommandLine.SortFlags = false
@@ -75,6 +76,7 @@ func main() {
 				*resetToken = true
 			}
 		}},
+		{"GO_CERTI_SERVICE", "service", func(v string) { *serviceAction = v }},
 	}
 	for _, o := range overrides {
 		if v, ok := os.LookupEnv(o.env); ok && v != "" {
@@ -89,6 +91,18 @@ func main() {
 	if *showVersion {
 		fmt.Println(version.Version)
 		os.Exit(0)
+	}
+
+	// --- Service management actions (install/uninstall/etc.) ---
+	// Handled before loading config/DB so install works on a fresh host
+	// without side-effects (no config dir is created on the installer's box;
+	// the service will create it when it first runs).
+	if *serviceAction != "" {
+		if err := runServiceAction(*serviceAction, *confDir, *port); err != nil {
+			slog.Error("service", "action", *serviceAction, "err", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	// --- Load or create config ---
@@ -171,12 +185,17 @@ func main() {
 	startCancel()
 	defer sched.Stop()
 
-	// --- Start HTTP server ---
+	// --- Start HTTP server (wrapped in service framework) ---
 	srv := api.New(dbConn, q, authSvc, scn, notifier, webui.FS())
 	addr := fmt.Sprintf(":%d", cfg.Port)
+	httpSrv := &http.Server{Addr: addr, Handler: srv}
+
 	slog.Info("go-certi starting", "version", version.Version, "addr", addr, "conf", *confDir)
 
-	if err := http.ListenAndServe(addr, srv); err != nil {
+	// runUnderService blocks until the service is stopped — either by Ctrl+C
+	// in interactive mode or by the OS service manager. It works identically
+	// under systemd, Windows SCM, launchd, and plain terminal use.
+	if err := runUnderService(httpSrv, *confDir, *port, func() { sched.Stop() }); err != nil {
 		slog.Error("server", "err", err)
 		os.Exit(1)
 	}
