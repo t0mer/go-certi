@@ -59,15 +59,16 @@ export default function Certificates() {
 
       <div className="divide-y border rounded-lg overflow-hidden bg-card">
         {filtered?.map((cert) => {
+          const issued = parseISO(cert.not_before)
           const expiry = parseISO(cert.not_after)
           const expired = expiry < new Date()
           const expiringSoon = !expired && expiry < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          const fmt = (d: Date) => d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
           return (
             <div key={cert.id} className="p-4">
               <div className="flex flex-col sm:flex-row sm:items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-mono font-medium truncate">{cert.subject_cn}</div>
-                  {/* Issuer: friendly name + full DN on hover */}
                   {cert.issuer_ca && (
                     <div className="text-sm text-muted-foreground truncate" title={cert.issuer_name || cert.issuer_ca}>
                       {cert.issuer_ca}
@@ -76,8 +77,18 @@ export default function Certificates() {
                       )}
                     </div>
                   )}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <span title="Issued">📅 {fmt(issued)}</span>
+                    <span className="mx-1.5 opacity-40">→</span>
+                    <span title="Expires" className={expired ? 'text-destructive font-medium' : expiringSoon ? 'text-yellow-600 dark:text-yellow-400 font-medium' : ''}>
+                      {fmt(expiry)}
+                    </span>
+                    <span className="ml-1.5 opacity-60">
+                      ({expired ? 'expired' : formatDistanceToNow(expiry, { addSuffix: true })})
+                    </span>
+                  </div>
                   {cert.sans.length > 1 && (
-                    <div className="text-xs text-muted-foreground mt-1 truncate">
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate">
                       +{cert.sans.length - 1} SANs: {cert.sans.slice(1, 4).join(', ')}{cert.sans.length > 4 ? '...' : ''}
                     </div>
                   )}
@@ -87,7 +98,7 @@ export default function Certificates() {
                     <Badge variant="destructive">Revoked</Badge>
                   )}
                   <Badge variant={expired ? 'destructive' : expiringSoon ? 'secondary' : 'default'}>
-                    {expired ? 'Expired' : `expires ${formatDistanceToNow(expiry, { addSuffix: true })}`}
+                    {expired ? 'Expired' : expiringSoon ? 'Expiring soon' : 'Valid'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">{cert.source}</span>
                 </div>
