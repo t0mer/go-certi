@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"io/fs"
+	"mime"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -88,20 +89,29 @@ func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterf
 	protected.POST("/updates/apply", h.ApplyUpdate)
 
 	// Frontend static assets + SPA fallback.
-	// /assets/* is registered as an explicit route so the file server always
-	// handles it and Go's mime detection sets the correct Content-Type.
-	// Relying on NoRoute for asset requests caused the file server to fall
-	// through to the SPA fallback and return index.html with text/html,
-	// which browsers reject for <script type="module">.
 	if webFS != nil {
-		fileServer := http.FileServer(http.FS(webFS))
+		// Minimal Linux/container images often have an incomplete system MIME
+		// database, causing Go to fall back to text/plain for .js and .css.
+		// Register them explicitly so browsers accept the responses.
+		_ = mime.AddExtensionType(".js", "text/javascript; charset=utf-8")
+		_ = mime.AddExtensionType(".mjs", "text/javascript; charset=utf-8")
+		_ = mime.AddExtensionType(".css", "text/css; charset=utf-8")
 
+		// Serve /assets/* from a sub-FS rooted at the assets directory.
+		// Gin's *filepath wildcard strips the /assets prefix from the URL
+		// before passing it to the handler, so we need a matching sub-FS.
+		assetsFS, err := fs.Sub(webFS, "assets")
+		if err != nil {
+			panic("webui: assets sub fs: " + err.Error())
+		}
 		s.engine.GET("/assets/*filepath", func(c *gin.Context) {
-			fileServer.ServeHTTP(c.Writer, c.Request)
+			// c.Param("filepath") is the path within /assets, e.g. /index-xxx.js
+			c.FileFromFS(c.Param("filepath"), http.FS(assetsFS))
 		})
 
-		// SPA fallback: all unmatched routes (including /) serve index.html
-		// so React Router can handle client-side navigation.
+		// SPA fallback: all unmatched routes serve index.html so React Router
+		// can handle client-side navigation.
+		fileServer := http.FileServer(http.FS(webFS))
 		s.engine.NoRoute(func(c *gin.Context) {
 			c.Request.URL.Path = "/"
 			fileServer.ServeHTTP(c.Writer, c.Request)
