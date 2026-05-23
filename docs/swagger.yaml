@@ -1,0 +1,913 @@
+basePath: /api/v1
+definitions:
+  api.CertificateListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.CertificateResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api.CertificateResponse:
+    properties:
+      discovered_at:
+        type: string
+      fqdn_id:
+        type: string
+      id:
+        type: string
+      issuer_ca:
+        type: string
+      not_after:
+        type: string
+      not_before:
+        type: string
+      sans:
+        items:
+          type: string
+        type: array
+      serial:
+        type: string
+      source:
+        type: string
+      subject_cn:
+        type: string
+    type: object
+  api.CreateChannelRequest:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      enabled:
+        type: boolean
+      name:
+        type: string
+      type:
+        enum:
+        - shoutrrr
+        - greenapi
+        - waweb
+        type: string
+    required:
+    - config
+    - name
+    - type
+    type: object
+  api.CreateFQDNRequest:
+    properties:
+      channel_ids:
+        items:
+          type: string
+        type: array
+      enabled:
+        type: boolean
+      fqdn:
+        type: string
+      include_subdomains:
+        type: boolean
+      notifications_enabled:
+        type: boolean
+      schedule_id:
+        type: string
+    required:
+    - fqdn
+    type: object
+  api.CreateScheduleRequest:
+    properties:
+      cron_expr:
+        type: string
+      enabled:
+        type: boolean
+      is_default:
+        type: boolean
+      name:
+        type: string
+    required:
+    - cron_expr
+    - name
+    type: object
+  api.ErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  api.FQDNResponse:
+    properties:
+      channel_ids:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      enabled:
+        type: boolean
+      fqdn:
+        type: string
+      id:
+        type: string
+      include_subdomains:
+        type: boolean
+      notifications_enabled:
+        type: boolean
+      schedule_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  api.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  api.SettingsResponse:
+    properties:
+      api_token_protection_enabled:
+        type: boolean
+      auth_enabled:
+        type: boolean
+      default_schedule_id:
+        type: string
+      sslmate_api_key:
+        type: string
+      theme:
+        type: string
+      username:
+        type: string
+    type: object
+  api.UpdateChannelRequest:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      enabled:
+        type: boolean
+      name:
+        type: string
+      type:
+        enum:
+        - shoutrrr
+        - greenapi
+        - waweb
+        type: string
+    required:
+    - config
+    - name
+    - type
+    type: object
+  api.UpdateFQDNRequest:
+    properties:
+      channel_ids:
+        items:
+          type: string
+        type: array
+      enabled:
+        type: boolean
+      fqdn:
+        type: string
+      include_subdomains:
+        type: boolean
+      notifications_enabled:
+        type: boolean
+      schedule_id:
+        type: string
+    required:
+    - fqdn
+    type: object
+  api.UpdateScheduleRequest:
+    properties:
+      cron_expr:
+        type: string
+      enabled:
+        type: boolean
+      is_default:
+        type: boolean
+      name:
+        type: string
+    required:
+    - cron_expr
+    - name
+    type: object
+  api.UpdateSettingsRequest:
+    properties:
+      api_token_protection_enabled:
+        type: boolean
+      auth_enabled:
+        type: boolean
+      default_schedule_id:
+        type: string
+      password:
+        type: string
+      sslmate_api_key:
+        type: string
+      theme:
+        enum:
+        - light
+        - dark
+        - system
+        type: string
+      username:
+        type: string
+    type: object
+  models.NotificationChannel:
+    properties:
+      config:
+        type: string
+      created_at:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Schedule:
+    properties:
+      created_at:
+        type: string
+      cron_expr:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      is_default:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8111
+info:
+  contact: {}
+  description: SSL Certificate Transparency monitor — REST API
+  title: go-certi API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Authenticate with username and password, receive a JWT
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      summary: Clear the auth cookie
+      tags:
+      - auth
+  /api/v1/auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Return the currently authenticated username
+      tags:
+      - auth
+  /api/v1/certificates:
+    get:
+      parameters:
+      - description: Filter by FQDN hostname
+        in: query
+        name: fqdn
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 25, max: 200)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CertificateListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List certificates with optional filtering and pagination
+      tags:
+      - certificates
+  /api/v1/certificates/{id}:
+    get:
+      parameters:
+      - description: Certificate ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CertificateResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get a single certificate by ID
+      tags:
+      - certificates
+  /api/v1/certificates/cas:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List distinct certificate authorities seen in CT logs
+      tags:
+      - certificates
+  /api/v1/channels:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.NotificationChannel'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List all notification channels
+      tags:
+      - channels
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Channel to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.NotificationChannel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create a new notification channel
+      tags:
+      - channels
+  /api/v1/channels/{id}:
+    delete:
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Delete a notification channel
+      tags:
+      - channels
+    get:
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.NotificationChannel'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get a single notification channel by ID
+      tags:
+      - channels
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated channel data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.NotificationChannel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Update an existing notification channel
+      tags:
+      - channels
+  /api/v1/channels/{id}/test:
+    post:
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Send a test notification via the specified channel
+      tags:
+      - channels
+  /api/v1/fqdns:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.FQDNResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List all FQDNs
+      tags:
+      - fqdns
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: FQDN to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateFQDNRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.FQDNResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create a new FQDN to monitor
+      tags:
+      - fqdns
+  /api/v1/fqdns/{id}:
+    delete:
+      parameters:
+      - description: FQDN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Delete an FQDN
+      tags:
+      - fqdns
+    get:
+      parameters:
+      - description: FQDN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FQDNResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get a single FQDN by ID
+      tags:
+      - fqdns
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: FQDN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated FQDN data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateFQDNRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FQDNResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Update an existing FQDN
+      tags:
+      - fqdns
+  /api/v1/fqdns/{id}/scan:
+    post:
+      parameters:
+      - description: FQDN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Trigger an immediate certificate scan for an FQDN
+      tags:
+      - fqdns
+  /api/v1/schedules:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Schedule'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List all schedules
+      tags:
+      - schedules
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Schedule to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Schedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create a new schedule
+      tags:
+      - schedules
+  /api/v1/schedules/{id}:
+    delete:
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Delete a schedule
+      tags:
+      - schedules
+    get:
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Schedule'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get a single schedule by ID
+      tags:
+      - schedules
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated schedule data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Schedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Update an existing schedule
+      tags:
+      - schedules
+  /api/v1/settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SettingsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get application settings (secrets are omitted)
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Settings to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SettingsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Update application settings
+      tags:
+      - settings
+  /api/v1/settings/api-token/rotate:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Generate and store a new API token (only time it is shown in plaintext)
+      tags:
+      - settings
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT token or opaque API token: "Bearer <token>"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
