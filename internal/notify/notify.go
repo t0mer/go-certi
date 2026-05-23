@@ -11,6 +11,15 @@ import (
 	"github.com/t0mer/go-certi/internal/models"
 )
 
+// EventType constants for notification events.
+const (
+	EventNewCert      = "new_cert"
+	EventExpiringSoon = "expiring_soon"
+	EventExpired      = "expired"
+	EventRevoked      = "revoked"
+	EventCAChanged    = "ca_changed"
+)
+
 // Dispatcher sends notifications for new certificates.
 type Dispatcher struct{}
 
@@ -89,6 +98,64 @@ func (d *Dispatcher) TestChannel(ctx context.Context, channel models.Notificatio
 		return dispatchWaWeb(ctx, channel.Config, msg)
 	}
 	return fmt.Errorf("unknown channel type: %s", channel.Type)
+}
+
+// formatEventMessage formats a notification message for event-based alerts.
+func formatEventMessage(event, fqdn string, cert models.Certificate, oldCA string) string {
+	expiry := cert.NotAfter
+	if t, err := time.Parse(time.RFC3339, cert.NotAfter); err == nil {
+		expiry = t.Format("2006-01-02")
+	}
+	serialShort := cert.Serial
+	if len(serialShort) > 16 {
+		serialShort = serialShort[:16]
+	}
+	switch event {
+	case EventExpiringSoon:
+		return fmt.Sprintf("[go-certi] Certificate expiring soon for %s\nCN: %s\nIssuer: %s\nExpires: %s\nSerial: %s",
+			fqdn, cert.SubjectCn, cert.IssuerCa, expiry, serialShort)
+	case EventExpired:
+		return fmt.Sprintf("[go-certi] Certificate EXPIRED for %s\nCN: %s\nIssuer: %s\nExpired: %s\nSerial: %s",
+			fqdn, cert.SubjectCn, cert.IssuerCa, expiry, serialShort)
+	case EventRevoked:
+		return fmt.Sprintf("[go-certi] Certificate REVOKED for %s\nCN: %s\nIssuer: %s\nSerial: %s",
+			fqdn, cert.SubjectCn, cert.IssuerCa, serialShort)
+	case EventCAChanged:
+		return fmt.Sprintf("[go-certi] Certificate Authority changed for %s\nWas: %s\nNow: %s\nCN: %s\nSerial: %s",
+			fqdn, oldCA, cert.IssuerCa, cert.SubjectCn, serialShort)
+	default:
+		return fmt.Sprintf("[go-certi] Certificate event (%s) for %s\nCN: %s", event, fqdn, cert.SubjectCn)
+	}
+}
+
+// DispatchEvent sends an event-based notification for a DB certificate record.
+func (d *Dispatcher) DispatchEvent(ctx context.Context, channel models.NotificationChannel, event, fqdn string, cert models.Certificate, oldCA string) {
+	if !channel.Enabled {
+		return
+	}
+	msg := formatEventMessage(event, fqdn, cert, oldCA)
+	var err error
+	switch channel.Type {
+	case "shoutrrr":
+		err = dispatchShoutrrr(ctx, channel.Config, msg)
+	case "greenapi":
+		err = dispatchGreenAPI(ctx, channel.Config, msg)
+	case "waweb":
+		err = dispatchWaWeb(ctx, channel.Config, msg)
+	default:
+		slog.Warn("unknown channel type", "type", channel.Type)
+		return
+	}
+	if err != nil {
+		slog.Error("event notification failed", "channel", channel.Name, "event", event, "err", err)
+	}
+}
+
+// DispatchEventAll sends an event notification to all channels. Best-effort.
+func (d *Dispatcher) DispatchEventAll(ctx context.Context, channels []models.NotificationChannel, event, fqdn string, cert models.Certificate, oldCA string) {
+	for _, ch := range channels {
+		d.DispatchEvent(ctx, ch, event, fqdn, cert, oldCA)
+	}
 }
 
 // parseConfig decodes a JSON config string into map[string]string.

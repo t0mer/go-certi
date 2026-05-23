@@ -32,6 +32,8 @@ type Fqdn struct {
 	ScheduleID           *string `json:"schedule_id"`
 	CreatedAt            string  `json:"created_at"`
 	UpdatedAt            string  `json:"updated_at"`
+	NotificationEvents   string  `json:"notification_events"`
+	ExpiryThresholdDays  int64   `json:"expiry_threshold_days"`
 }
 
 type FqdnChannel struct {
@@ -47,6 +49,14 @@ type NotificationChannel struct {
 	Enabled   bool   `json:"enabled"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+}
+
+type NotificationLog struct {
+	ID     string `json:"id"`
+	FqdnID string `json:"fqdn_id"`
+	CertID string `json:"cert_id"`
+	Event  string `json:"event"`
+	SentAt string `json:"sent_at"`
 }
 
 type Schedule struct {
