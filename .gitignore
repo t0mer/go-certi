@@ -25,6 +25,7 @@ vendor/
 web/node_modules/
 web/dist/
 !web/dist/.gitkeep
+!web/dist/index.html
 web/.vite/
 *.log
 npm-debug.log*
