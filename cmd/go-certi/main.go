@@ -2,7 +2,7 @@
 // @version         1.0
 // @description     SSL Certificate Transparency monitor — REST API
 // @host            localhost:8111
-// @BasePath        /api/v1
+// @BasePath        /
 // @securityDefinitions.apikey BearerAuth
 // @in              header
 // @name            Authorization

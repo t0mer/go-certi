@@ -47,15 +47,15 @@ func NewWithBaseURL(sslmateKey, sslmateBaseURL, crtshBaseURL string) *Client {
 }
 
 // FetchCerts retrieves certificates for fqdn from sslmate (primary) with crt.sh fallback.
+// sslmate is always tried first — it supports anonymous requests with reduced rate limits.
+// The API key, if set, unlocks higher rate limits.
 func (c *Client) FetchCerts(ctx context.Context, fqdn string, includeSubdomains bool) ([]Cert, error) {
-	if c.sslmateKey != "" {
-		certs, err := fetchSslmate(ctx, c.sslmateKey, c.sslmateBase, fqdn, includeSubdomains)
-		if err == nil {
-			return certs, nil
-		}
-		slog.Warn("sslmate fetch failed, falling back to crt.sh", "fqdn", fqdn, "err", err)
+	certs, err := fetchSslmate(ctx, c.sslmateKey, c.sslmateBase, fqdn, includeSubdomains)
+	if err == nil {
+		return certs, nil
 	}
-	certs, err := fetchCrtsh(ctx, c.crtshBase, fqdn, includeSubdomains)
+	slog.Warn("sslmate fetch failed, falling back to crt.sh", "fqdn", fqdn, "err", err)
+	certs, err = fetchCrtsh(ctx, c.crtshBase, fqdn, includeSubdomains)
 	if err != nil {
 		return nil, fmt.Errorf("ct fetch: %w", err)
 	}

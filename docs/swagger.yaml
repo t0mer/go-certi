@@ -1,10 +1,10 @@
-basePath: /api/v1
+basePath: /
 definitions:
-  api.CertificateListResponse:
+  github_com_t0mer_go-certi_internal_api.CertificateListResponse:
     properties:
       items:
         items:
-          $ref: '#/definitions/api.CertificateResponse'
+          $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.CertificateResponse'
         type: array
       page:
         type: integer
@@ -13,7 +13,7 @@ definitions:
       total:
         type: integer
     type: object
-  api.CertificateResponse:
+  github_com_t0mer_go-certi_internal_api.CertificateResponse:
     properties:
       discovered_at:
         type: string
@@ -38,7 +38,7 @@ definitions:
       subject_cn:
         type: string
     type: object
-  api.CreateChannelRequest:
+  github_com_t0mer_go-certi_internal_api.CreateChannelRequest:
     properties:
       config:
         additionalProperties: {}
@@ -58,7 +58,7 @@ definitions:
     - name
     - type
     type: object
-  api.CreateFQDNRequest:
+  github_com_t0mer_go-certi_internal_api.CreateFQDNRequest:
     properties:
       channel_ids:
         items:
@@ -77,7 +77,7 @@ definitions:
     required:
     - fqdn
     type: object
-  api.CreateScheduleRequest:
+  github_com_t0mer_go-certi_internal_api.CreateScheduleRequest:
     properties:
       cron_expr:
         type: string
@@ -91,7 +91,7 @@ definitions:
     - cron_expr
     - name
     type: object
-  api.ErrorResponse:
+  github_com_t0mer_go-certi_internal_api.ErrorResponse:
     properties:
       error:
         type: string
@@ -100,7 +100,7 @@ definitions:
           type: string
         type: object
     type: object
-  api.FQDNResponse:
+  github_com_t0mer_go-certi_internal_api.FQDNResponse:
     properties:
       channel_ids:
         items:
@@ -123,7 +123,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.LoginRequest:
+  github_com_t0mer_go-certi_internal_api.LoginRequest:
     properties:
       password:
         type: string
@@ -133,12 +133,12 @@ definitions:
     - password
     - username
     type: object
-  api.LoginResponse:
+  github_com_t0mer_go-certi_internal_api.LoginResponse:
     properties:
       token:
         type: string
     type: object
-  api.SettingsResponse:
+  github_com_t0mer_go-certi_internal_api.SettingsResponse:
     properties:
       api_token_protection_enabled:
         type: boolean
@@ -153,7 +153,7 @@ definitions:
       username:
         type: string
     type: object
-  api.UpdateChannelRequest:
+  github_com_t0mer_go-certi_internal_api.UpdateChannelRequest:
     properties:
       config:
         additionalProperties: {}
@@ -173,7 +173,7 @@ definitions:
     - name
     - type
     type: object
-  api.UpdateFQDNRequest:
+  github_com_t0mer_go-certi_internal_api.UpdateFQDNRequest:
     properties:
       channel_ids:
         items:
@@ -192,7 +192,7 @@ definitions:
     required:
     - fqdn
     type: object
-  api.UpdateScheduleRequest:
+  github_com_t0mer_go-certi_internal_api.UpdateScheduleRequest:
     properties:
       cron_expr:
         type: string
@@ -206,7 +206,234 @@ definitions:
     - cron_expr
     - name
     type: object
-  api.UpdateSettingsRequest:
+  github_com_t0mer_go-certi_internal_api.UpdateSettingsRequest:
+    properties:
+      api_token_protection_enabled:
+        type: boolean
+      auth_enabled:
+        type: boolean
+      default_schedule_id:
+        type: string
+      password:
+        type: string
+      sslmate_api_key:
+        type: string
+      theme:
+        enum:
+        - light
+        - dark
+        - system
+        type: string
+      username:
+        type: string
+    type: object
+  internal_api.CertificateListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_api.CertificateResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  internal_api.CertificateResponse:
+    properties:
+      discovered_at:
+        type: string
+      fqdn_id:
+        type: string
+      id:
+        type: string
+      issuer_ca:
+        type: string
+      not_after:
+        type: string
+      not_before:
+        type: string
+      sans:
+        items:
+          type: string
+        type: array
+      serial:
+        type: string
+      source:
+        type: string
+      subject_cn:
+        type: string
+    type: object
+  internal_api.CreateChannelRequest:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      enabled:
+        type: boolean
+      name:
+        type: string
+      type:
+        enum:
+        - shoutrrr
+        - greenapi
+        - waweb
+        type: string
+    required:
+    - config
+    - name
+    - type
+    type: object
+  internal_api.CreateFQDNRequest:
+    properties:
+      channel_ids:
+        items:
+          type: string
+        type: array
+      enabled:
+        type: boolean
+      fqdn:
+        type: string
+      include_subdomains:
+        type: boolean
+      notifications_enabled:
+        type: boolean
+      schedule_id:
+        type: string
+    required:
+    - fqdn
+    type: object
+  internal_api.CreateScheduleRequest:
+    properties:
+      cron_expr:
+        type: string
+      enabled:
+        type: boolean
+      is_default:
+        type: boolean
+      name:
+        type: string
+    required:
+    - cron_expr
+    - name
+    type: object
+  internal_api.ErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  internal_api.FQDNResponse:
+    properties:
+      channel_ids:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      enabled:
+        type: boolean
+      fqdn:
+        type: string
+      id:
+        type: string
+      include_subdomains:
+        type: boolean
+      notifications_enabled:
+        type: boolean
+      schedule_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_api.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  internal_api.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  internal_api.SettingsResponse:
+    properties:
+      api_token_protection_enabled:
+        type: boolean
+      auth_enabled:
+        type: boolean
+      default_schedule_id:
+        type: string
+      sslmate_api_key:
+        type: string
+      theme:
+        type: string
+      username:
+        type: string
+    type: object
+  internal_api.UpdateChannelRequest:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      enabled:
+        type: boolean
+      name:
+        type: string
+      type:
+        enum:
+        - shoutrrr
+        - greenapi
+        - waweb
+        type: string
+    required:
+    - config
+    - name
+    - type
+    type: object
+  internal_api.UpdateFQDNRequest:
+    properties:
+      channel_ids:
+        items:
+          type: string
+        type: array
+      enabled:
+        type: boolean
+      fqdn:
+        type: string
+      include_subdomains:
+        type: boolean
+      notifications_enabled:
+        type: boolean
+      schedule_id:
+        type: string
+    required:
+    - fqdn
+    type: object
+  internal_api.UpdateScheduleRequest:
+    properties:
+      cron_expr:
+        type: string
+      enabled:
+        type: boolean
+      is_default:
+        type: boolean
+      name:
+        type: string
+    required:
+    - cron_expr
+    - name
+    type: object
+  internal_api.UpdateSettingsRequest:
     properties:
       api_token_protection_enabled:
         type: boolean
@@ -278,26 +505,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.LoginRequest'
+          $ref: '#/definitions/internal_api.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.LoginResponse'
+            $ref: '#/definitions/internal_api.LoginResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Authenticate with username and password, receive a JWT
       tags:
       - auth
@@ -323,7 +550,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Return the currently authenticated username
       tags:
       - auth
@@ -348,11 +575,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.CertificateListResponse'
+            $ref: '#/definitions/internal_api.CertificateListResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: List certificates with optional filtering and pagination
       tags:
       - certificates
@@ -370,15 +597,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.CertificateResponse'
+            $ref: '#/definitions/internal_api.CertificateResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Get a single certificate by ID
       tags:
       - certificates
@@ -396,7 +623,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: List distinct certificate authorities seen in CT logs
       tags:
       - certificates
@@ -414,7 +641,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: List all notification channels
       tags:
       - channels
@@ -427,7 +654,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.CreateChannelRequest'
+          $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.CreateChannelRequest'
       produces:
       - application/json
       responses:
@@ -438,11 +665,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Create a new notification channel
       tags:
       - channels
@@ -460,11 +687,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Delete a notification channel
       tags:
       - channels
@@ -485,11 +712,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Get a single notification channel by ID
       tags:
       - channels
@@ -507,7 +734,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateChannelRequest'
+          $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.UpdateChannelRequest'
       produces:
       - application/json
       responses:
@@ -518,15 +745,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Update an existing notification channel
       tags:
       - channels
@@ -548,11 +775,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "502":
           description: Bad Gateway
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Send a test notification via the specified channel
       tags:
       - channels
@@ -565,12 +792,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/api.FQDNResponse'
+              $ref: '#/definitions/internal_api.FQDNResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: List all FQDNs
       tags:
       - fqdns
@@ -583,22 +810,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.CreateFQDNRequest'
+          $ref: '#/definitions/internal_api.CreateFQDNRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.FQDNResponse'
+            $ref: '#/definitions/internal_api.FQDNResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Create a new FQDN to monitor
       tags:
       - fqdns
@@ -616,11 +843,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Delete an FQDN
       tags:
       - fqdns
@@ -637,15 +864,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.FQDNResponse'
+            $ref: '#/definitions/internal_api.FQDNResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Get a single FQDN by ID
       tags:
       - fqdns
@@ -663,26 +890,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateFQDNRequest'
+          $ref: '#/definitions/internal_api.UpdateFQDNRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.FQDNResponse'
+            $ref: '#/definitions/internal_api.FQDNResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Update an existing FQDN
       tags:
       - fqdns
@@ -704,11 +931,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Trigger an immediate certificate scan for an FQDN
       tags:
       - fqdns
@@ -726,7 +953,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: List all schedules
       tags:
       - schedules
@@ -739,7 +966,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.CreateScheduleRequest'
+          $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.CreateScheduleRequest'
       produces:
       - application/json
       responses:
@@ -750,11 +977,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Create a new schedule
       tags:
       - schedules
@@ -772,11 +999,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Delete a schedule
       tags:
       - schedules
@@ -797,11 +1024,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Get a single schedule by ID
       tags:
       - schedules
@@ -819,7 +1046,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateScheduleRequest'
+          $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.UpdateScheduleRequest'
       produces:
       - application/json
       responses:
@@ -830,15 +1057,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Update an existing schedule
       tags:
       - schedules
@@ -850,11 +1077,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.SettingsResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.SettingsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Get application settings (secrets are omitted)
       tags:
       - settings
@@ -867,22 +1094,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateSettingsRequest'
+          $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.UpdateSettingsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.SettingsResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.SettingsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Update application settings
       tags:
       - settings
@@ -900,7 +1127,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/github_com_t0mer_go-certi_internal_api.ErrorResponse'
       summary: Generate and store a new API token (only time it is shown in plaintext)
       tags:
       - settings

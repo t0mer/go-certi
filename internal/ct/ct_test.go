@@ -44,6 +44,12 @@ func TestSslmateFetch(t *testing.T) {
 }
 
 func TestCrtshFetch(t *testing.T) {
+	// sslmate mock returns 500 so we exercise the crt.sh fallback path
+	sslmateSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer sslmateSrv.Close()
+
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]map[string]any{
 			{
@@ -58,7 +64,7 @@ func TestCrtshFetch(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := ct.NewWithBaseURL("", "", srv.URL)
+	client := ct.NewWithBaseURL("", sslmateSrv.URL, srv.URL)
 	certs, err := client.FetchCerts(context.Background(), "example.com", false)
 	if err != nil {
 		t.Fatalf("FetchCerts: %v", err)

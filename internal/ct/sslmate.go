@@ -27,7 +27,7 @@ func fetchSslmate(ctx context.Context, apiKey, baseURL, fqdn string, includeSubd
 	q := u.Query()
 	q.Set("domain", fqdn)
 	q.Set("include_subdomains", fmt.Sprintf("%t", includeSubdomains))
-	q.Set("expand", "dns_names")
+	q.Add("expand", "dns_names")
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
