@@ -23,7 +23,7 @@ func setupTestServer(t *testing.T) *api.Server {
 	t.Cleanup(func() { conn.Close() })
 	q := models.New(conn)
 	authSvc := auth.New("test-secret")
-	return api.New(conn, q, authSvc, nil, nil, nil)
+	return api.New(conn, q, authSvc, nil, nil, nil, nil)
 }
 
 func TestAPIFQDNCRUD(t *testing.T) {

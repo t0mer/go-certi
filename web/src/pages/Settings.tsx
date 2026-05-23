@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { RefreshCw } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,9 @@ export default function SettingsPage() {
   const [newToken, setNewToken] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [saved, setSaved] = useState(false)
+  const [updateCheckEnabled, setUpdateCheckEnabled] = useState(true)
+  const [updateCheckInterval, setUpdateCheckInterval] = useState(24)
+  const [checkResult, setCheckResult] = useState<string | null>(null)
 
   const { data: settings, isLoading } = useQuery({ queryKey: ['settings'], queryFn: api.settings.get })
 
@@ -132,6 +136,47 @@ export default function SettingsPage() {
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Application Updates</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={updateCheckEnabled}
+              onChange={(e) => setUpdateCheckEnabled(e.target.checked)} />
+            <span className="text-sm">Periodically check for new releases on GitHub</span>
+          </label>
+          {updateCheckEnabled && (
+            <div className="flex items-center gap-2 ml-6">
+              <span className="text-xs text-muted-foreground">Check every</span>
+              <Input
+                type="number" min={1} max={720}
+                value={updateCheckInterval}
+                onChange={(e) => setUpdateCheckInterval(Math.max(1, Number(e.target.value)))}
+                className="h-7 w-20 text-xs"
+              />
+              <span className="text-xs text-muted-foreground">hours</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline"
+              onClick={async () => {
+                setCheckResult(null)
+                try {
+                  const st = await api.updates.status()
+                  setCheckResult(st.update_available
+                    ? `Update available: ${st.latest_version}`
+                    : `Up to date (${st.current_version})`)
+                } catch {
+                  setCheckResult('Check failed — see console')
+                }
+              }}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" /> Check now
+            </Button>
+            {checkResult && <span className="text-xs text-muted-foreground">{checkResult}</span>}
+          </div>
         </CardContent>
       </Card>
 

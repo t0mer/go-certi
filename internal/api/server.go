@@ -11,6 +11,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/t0mer/go-certi/internal/auth"
 	"github.com/t0mer/go-certi/internal/models"
+	"github.com/t0mer/go-certi/internal/updater"
 
 	_ "github.com/t0mer/go-certi/docs"
 )
@@ -23,12 +24,12 @@ type Server struct {
 
 // New constructs the server with all routes registered.
 // Pass nil for scn/notif during bootstrap (stubs); they'll be wired in CT plan.
-func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterface, notif NotifyInterface, webFS fs.FS) *Server {
+func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterface, notif NotifyInterface, upd *updater.Service, webFS fs.FS) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	s := &Server{engine: gin.New(), db: db}
 	s.engine.Use(gin.Recovery())
 
-	h := newHandler(db, q, authSvc, scn, notif)
+	h := newHandler(db, q, authSvc, scn, notif, upd)
 
 	// Health — always unauthenticated
 	s.engine.GET("/healthz", s.healthz)
@@ -82,6 +83,10 @@ func New(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterf
 	protected.GET("/settings", h.GetSettings)
 	protected.PUT("/settings", h.UpdateSettings)
 	protected.POST("/settings/api-token/rotate", h.RotateAPIToken)
+
+	// Updates
+	protected.GET("/updates/status", h.GetUpdateStatus)
+	protected.POST("/updates/apply", h.ApplyUpdate)
 
 	// Frontend — SPA fallback: serve real files, fall back to index.html for React Router paths.
 	// fs.FS.Open requires paths without a leading slash, so we strip it for the existence check.

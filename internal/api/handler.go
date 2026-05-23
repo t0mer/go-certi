@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/t0mer/go-certi/internal/auth"
 	"github.com/t0mer/go-certi/internal/models"
+	"github.com/t0mer/go-certi/internal/updater"
 )
 
 // ScannerInterface allows the handler to trigger scans.
@@ -28,10 +29,11 @@ type Handler struct {
 	authSvc *auth.Service
 	scanner ScannerInterface
 	notify  NotifyInterface
+	updater *updater.Service
 }
 
-func newHandler(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterface, notif NotifyInterface) *Handler {
-	return &Handler{q: q, db: db, authSvc: authSvc, scanner: scn, notify: notif}
+func newHandler(db *sql.DB, q *models.Queries, authSvc *auth.Service, scn ScannerInterface, notif NotifyInterface, upd *updater.Service) *Handler {
+	return &Handler{q: q, db: db, authSvc: authSvc, scanner: scn, notify: notif, updater: upd}
 }
 
 func respondError(c *gin.Context, status int, msg string) {

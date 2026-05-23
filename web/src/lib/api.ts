@@ -38,6 +38,16 @@ export interface Settings {
   theme: 'light' | 'dark' | 'system'; sslmate_api_key: string; default_schedule_id: string | null
 }
 
+export interface UpdateStatus {
+  current_version: string
+  latest_version: string
+  update_available: boolean
+  release_url: string
+  release_notes: string
+  release_name: string
+  published_at: string
+}
+
 export const api = {
   fqdns: {
     list: () => request<FQDN[]>('/fqdns'),
@@ -85,5 +95,9 @@ export const api = {
       request<{ token: string }>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
     logout: () => request<void>('/auth/logout', { method: 'POST' }),
     me: () => request<{ username: string }>('/auth/me'),
+  },
+  updates: {
+    status: () => request<UpdateStatus>('/updates/status'),
+    apply:  () => request<{ status: string }>('/updates/apply', { method: 'POST' }),
   },
 }
