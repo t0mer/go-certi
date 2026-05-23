@@ -189,7 +189,7 @@ func main() {
 	// --- Start HTTP server (wrapped in service framework) ---
 	upd := updater.New()
 	srv := api.New(dbConn, q, authSvc, scn, notifier, upd, webui.FS())
-	addr := fmt.Sprintf(":%d", cfg.Port)
+	addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
 	httpSrv := &http.Server{Addr: addr, Handler: srv}
 
 	slog.Info("go-certi starting", "version", version.Version, "addr", addr, "conf", *confDir)
