@@ -20,8 +20,8 @@ export interface FQDN {
   created_at: string; updated_at: string
 }
 export interface Certificate {
-  id: string; fqdn_id: string; serial: string; issuer_ca: string; subject_cn: string
-  sans: string[]; not_before: string; not_after: string; discovered_at: string; source: string
+  id: string; fqdn_id: string; serial: string; issuer_ca: string; issuer_name: string; subject_cn: string
+  sans: string[]; not_before: string; not_after: string; discovered_at: string; source: string; revoked: boolean
 }
 export interface CertificateListResponse { items: Certificate[]; total: number; page: number; page_size: number }
 export interface Channel {

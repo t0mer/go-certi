@@ -67,7 +67,15 @@ export default function Certificates() {
               <div className="flex flex-col sm:flex-row sm:items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-mono font-medium truncate">{cert.subject_cn}</div>
-                  <div className="text-sm text-muted-foreground truncate">{cert.issuer_ca}</div>
+                  {/* Issuer: friendly name + full DN on hover */}
+                  {cert.issuer_ca && (
+                    <div className="text-sm text-muted-foreground truncate" title={cert.issuer_name || cert.issuer_ca}>
+                      {cert.issuer_ca}
+                      {cert.issuer_name && cert.issuer_name !== cert.issuer_ca && (
+                        <span className="text-xs ml-1 opacity-60">({cert.issuer_name})</span>
+                      )}
+                    </div>
+                  )}
                   {cert.sans.length > 1 && (
                     <div className="text-xs text-muted-foreground mt-1 truncate">
                       +{cert.sans.length - 1} SANs: {cert.sans.slice(1, 4).join(', ')}{cert.sans.length > 4 ? '...' : ''}
@@ -75,6 +83,9 @@ export default function Certificates() {
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
+                  {cert.revoked && (
+                    <Badge variant="destructive">Revoked</Badge>
+                  )}
                   <Badge variant={expired ? 'destructive' : expiringSoon ? 'secondary' : 'default'}>
                     {expired ? 'Expired' : `expires ${formatDistanceToNow(expiry, { addSuffix: true })}`}
                   </Badge>

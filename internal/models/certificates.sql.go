@@ -32,7 +32,7 @@ func (q *Queries) CountCertificatesByFQDN(ctx context.Context, fqdnID string) (i
 }
 
 const getCertificate = `-- name: GetCertificate :one
-SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source FROM certificates WHERE id = ?
+SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source, issuer_name, revoked FROM certificates WHERE id = ?
 `
 
 func (q *Queries) GetCertificate(ctx context.Context, id string) (Certificate, error) {
@@ -49,12 +49,14 @@ func (q *Queries) GetCertificate(ctx context.Context, id string) (Certificate, e
 		&i.NotAfter,
 		&i.DiscoveredAt,
 		&i.Source,
+		&i.IssuerName,
+		&i.Revoked,
 	)
 	return i, err
 }
 
 const getCertificateBySerial = `-- name: GetCertificateBySerial :one
-SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source FROM certificates WHERE fqdn_id = ? AND serial = ?
+SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source, issuer_name, revoked FROM certificates WHERE fqdn_id = ? AND serial = ?
 `
 
 type GetCertificateBySerialParams struct {
@@ -76,15 +78,17 @@ func (q *Queries) GetCertificateBySerial(ctx context.Context, arg GetCertificate
 		&i.NotAfter,
 		&i.DiscoveredAt,
 		&i.Source,
+		&i.IssuerName,
+		&i.Revoked,
 	)
 	return i, err
 }
 
 const insertCertificate = `-- name: InsertCertificate :one
 INSERT OR IGNORE INTO certificates
-    (id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source
+    (id, fqdn_id, serial, issuer_ca, issuer_name, subject_cn, sans, not_before, not_after, discovered_at, source, revoked)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source, issuer_name, revoked
 `
 
 type InsertCertificateParams struct {
@@ -92,12 +96,14 @@ type InsertCertificateParams struct {
 	FqdnID       string `json:"fqdn_id"`
 	Serial       string `json:"serial"`
 	IssuerCa     string `json:"issuer_ca"`
+	IssuerName   string `json:"issuer_name"`
 	SubjectCn    string `json:"subject_cn"`
 	Sans         string `json:"sans"`
 	NotBefore    string `json:"not_before"`
 	NotAfter     string `json:"not_after"`
 	DiscoveredAt string `json:"discovered_at"`
 	Source       string `json:"source"`
+	Revoked      bool   `json:"revoked"`
 }
 
 func (q *Queries) InsertCertificate(ctx context.Context, arg InsertCertificateParams) (Certificate, error) {
@@ -106,12 +112,14 @@ func (q *Queries) InsertCertificate(ctx context.Context, arg InsertCertificatePa
 		arg.FqdnID,
 		arg.Serial,
 		arg.IssuerCa,
+		arg.IssuerName,
 		arg.SubjectCn,
 		arg.Sans,
 		arg.NotBefore,
 		arg.NotAfter,
 		arg.DiscoveredAt,
 		arg.Source,
+		arg.Revoked,
 	)
 	var i Certificate
 	err := row.Scan(
@@ -125,12 +133,14 @@ func (q *Queries) InsertCertificate(ctx context.Context, arg InsertCertificatePa
 		&i.NotAfter,
 		&i.DiscoveredAt,
 		&i.Source,
+		&i.IssuerName,
+		&i.Revoked,
 	)
 	return i, err
 }
 
 const listCertificates = `-- name: ListCertificates :many
-SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source FROM certificates ORDER BY discovered_at DESC LIMIT ? OFFSET ?
+SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source, issuer_name, revoked FROM certificates ORDER BY discovered_at DESC LIMIT ? OFFSET ?
 `
 
 type ListCertificatesParams struct {
@@ -158,6 +168,8 @@ func (q *Queries) ListCertificates(ctx context.Context, arg ListCertificatesPara
 			&i.NotAfter,
 			&i.DiscoveredAt,
 			&i.Source,
+			&i.IssuerName,
+			&i.Revoked,
 		); err != nil {
 			return nil, err
 		}
@@ -173,7 +185,7 @@ func (q *Queries) ListCertificates(ctx context.Context, arg ListCertificatesPara
 }
 
 const listCertificatesByFQDN = `-- name: ListCertificatesByFQDN :many
-SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source FROM certificates WHERE fqdn_id = ?
+SELECT id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source, issuer_name, revoked FROM certificates WHERE fqdn_id = ?
 ORDER BY discovered_at DESC LIMIT ? OFFSET ?
 `
 
@@ -203,6 +215,8 @@ func (q *Queries) ListCertificatesByFQDN(ctx context.Context, arg ListCertificat
 			&i.NotAfter,
 			&i.DiscoveredAt,
 			&i.Source,
+			&i.IssuerName,
+			&i.Revoked,
 		); err != nil {
 			return nil, err
 		}

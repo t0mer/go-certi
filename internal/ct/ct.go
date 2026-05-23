@@ -8,13 +8,15 @@ import (
 
 // Cert holds data extracted from a CT log entry.
 type Cert struct {
-	Serial    string
-	IssuerCA  string
-	SubjectCN string
-	SANs      []string
-	NotBefore string // RFC3339
-	NotAfter  string // RFC3339
-	Source    string // "sslmate" or "crt.sh"
+	Serial              string
+	IssuerCA            string // friendly name, e.g. "Let's Encrypt"
+	IssuerName          string // full DN, e.g. "C=US, O=Let's Encrypt, CN=E8"
+	SubjectCN           string
+	SANs                []string
+	NotBefore           string // RFC3339
+	NotAfter            string // RFC3339
+	Source              string // "sslmate" or "crt.sh"
+	Revoked             bool
 }
 
 // Client fetches CT log entries for an FQDN.

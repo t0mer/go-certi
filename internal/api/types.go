@@ -39,12 +39,14 @@ type CertificateResponse struct {
 	FQDNID       string   `json:"fqdn_id"`
 	Serial       string   `json:"serial"`
 	IssuerCA     string   `json:"issuer_ca"`
+	IssuerName   string   `json:"issuer_name"`
 	SubjectCN    string   `json:"subject_cn"`
 	SANs         []string `json:"sans"`
 	NotBefore    string   `json:"not_before"`
 	NotAfter     string   `json:"not_after"`
 	DiscoveredAt string   `json:"discovered_at"`
 	Source       string   `json:"source"`
+	Revoked      bool     `json:"revoked"`
 }
 
 type CertificateListResponse struct {

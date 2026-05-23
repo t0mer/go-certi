@@ -56,12 +56,14 @@ func (s *Scanner) ScanFQDN(ctx context.Context, fqdn models.Fqdn) error {
 			FqdnID:       fqdn.ID,
 			Serial:       cert.Serial,
 			IssuerCa:     cert.IssuerCA,
+			IssuerName:   cert.IssuerName,
 			SubjectCn:    cert.SubjectCN,
 			Sans:         string(sans),
 			NotBefore:    cert.NotBefore,
 			NotAfter:     cert.NotAfter,
 			DiscoveredAt: time.Now().UTC().Format(time.RFC3339),
 			Source:       cert.Source,
+			Revoked:      cert.Revoked,
 		})
 		if err != nil {
 			// INSERT OR IGNORE returns no rows when the serial already exists;

@@ -19,6 +19,8 @@ type Certificate struct {
 	NotAfter     string `json:"not_after"`
 	DiscoveredAt string `json:"discovered_at"`
 	Source       string `json:"source"`
+	IssuerName   string `json:"issuer_name"`
+	Revoked      bool   `json:"revoked"`
 }
 
 type Fqdn struct {

@@ -19,8 +19,8 @@ SELECT * FROM certificates WHERE fqdn_id = ? AND serial = ?;
 
 -- name: InsertCertificate :one
 INSERT OR IGNORE INTO certificates
-    (id, fqdn_id, serial, issuer_ca, subject_cn, sans, not_before, not_after, discovered_at, source)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (id, fqdn_id, serial, issuer_ca, issuer_name, subject_cn, sans, not_before, not_after, discovered_at, source, revoked)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: ListDistinctCAs :many

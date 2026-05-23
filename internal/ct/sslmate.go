@@ -13,10 +13,12 @@ type sslmateEntry struct {
 	TBSSha256 string   `json:"tbs_sha256"`
 	DNSNames  []string `json:"dns_names"`
 	Issuer    struct {
-		Name string `json:"name"`
+		FriendlyName string `json:"friendly_name"`
+		Name         string `json:"name"`
 	} `json:"issuer"`
 	NotBefore string `json:"not_before"`
 	NotAfter  string `json:"not_after"`
+	Revoked   bool   `json:"revoked"`
 }
 
 func fetchSslmate(ctx context.Context, apiKey, baseURL, fqdn string, includeSubdomains bool) ([]Cert, error) {
@@ -28,6 +30,7 @@ func fetchSslmate(ctx context.Context, apiKey, baseURL, fqdn string, includeSubd
 	q.Set("domain", fqdn)
 	q.Set("include_subdomains", fmt.Sprintf("%t", includeSubdomains))
 	q.Add("expand", "dns_names")
+	q.Add("expand", "issuer")
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -64,14 +67,20 @@ func fetchSslmate(ctx context.Context, apiKey, baseURL, fqdn string, includeSubd
 		if len(e.DNSNames) > 0 {
 			cn = e.DNSNames[0]
 		}
+		issuerCA := e.Issuer.FriendlyName
+		if issuerCA == "" {
+			issuerCA = e.Issuer.Name
+		}
 		certs = append(certs, Cert{
-			Serial:    e.TBSSha256,
-			IssuerCA:  e.Issuer.Name,
-			SubjectCN: cn,
-			SANs:      e.DNSNames,
-			NotBefore: nb,
-			NotAfter:  na,
-			Source:    "sslmate",
+			Serial:     e.TBSSha256,
+			IssuerCA:   issuerCA,
+			IssuerName: e.Issuer.Name,
+			SubjectCN:  cn,
+			SANs:       e.DNSNames,
+			NotBefore:  nb,
+			NotAfter:   na,
+			Source:     "sslmate",
+			Revoked:    e.Revoked,
 		})
 	}
 	return certs, nil

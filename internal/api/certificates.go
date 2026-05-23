@@ -20,12 +20,14 @@ func certToResponse(cert models.Certificate) CertificateResponse {
 		FQDNID:       cert.FqdnID,
 		Serial:       cert.Serial,
 		IssuerCA:     cert.IssuerCa,
+		IssuerName:   cert.IssuerName,
 		SubjectCN:    cert.SubjectCn,
 		SANs:         sans,
 		NotBefore:    cert.NotBefore,
 		NotAfter:     cert.NotAfter,
 		DiscoveredAt: cert.DiscoveredAt,
 		Source:       cert.Source,
+		Revoked:      cert.Revoked,
 	}
 }
 
