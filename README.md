@@ -39,14 +39,14 @@ go-certi watches [Certificate Transparency](https://certificate.transparency.dev
 ### Dashboard
 Overview of monitored FQDNs, total certificates discovered, notification channels, and schedules. Recent certificates are listed with issuer and expiry.
 
-![Dashboard](docs/screenshots/dashboard.png)
+![Dashboard](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/dashboard.png)
 
 ---
 
 ### FQDNs
 Monitor multiple domains. Each domain shows the number of configured channels and active notification events. Click ⚙ to open the configuration panel, where you can select notification channels and choose which events trigger alerts.
 
-![FQDNs](docs/screenshots/fqdns.png)
+![FQDNs](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/fqdns.png)
 
 ---
 
@@ -60,21 +60,21 @@ Click the ⚙ gear button on any FQDN to configure:
 ### Certificates
 Paginated list of all discovered certificates. Shows subject CN, issuer (friendly name + full DN), issue date → expiry date with relative countdown, SANs, source, and a **Revoked** badge when applicable. Filter by FQDN or search by CN/SAN/CA.
 
-![Certificates](docs/screenshots/certificates.png)
+![Certificates](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/certificates.png)
 
 ---
 
 ### Notification Channels
 Create and manage reusable notification channels. Each channel has a **Test** button to verify delivery, and a **✏ Edit** button to update the name or configuration at any time.
 
-![Channels](docs/screenshots/channels.png)
+![Channels](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/channels.png)
 
 ---
 
 ### Schedules
 Define cron-based scan schedules. Supports robfig/cron syntax: `@every 1h`, `@daily`, `0 */4 * * *`, etc. Mark one as the default — FQDNs without a custom schedule inherit it.
 
-![Schedules](docs/screenshots/schedules.png)
+![Schedules](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/schedules.png)
 
 ---
 
@@ -84,21 +84,21 @@ Define cron-based scan schedules. Supports robfig/cron syntax: `@every 1h`, `@da
 - **UI Authentication** — Require login with username + password
 - **API Token Protection** — Require `Authorization: Bearer <token>` on all API requests; rotate token at any time
 
-![Settings](docs/screenshots/settings.png)
+![Settings](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/settings.png)
 
 ---
 
 ### Login
 Shown when UI authentication is enabled. Issues a signed JWT in an HttpOnly cookie on success.
 
-![Login](docs/screenshots/login.png)
+![Login](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/login.png)
 
 ---
 
 ### Swagger / API Docs
 Interactive OpenAPI 3 documentation for all endpoints, available at `/swagger/index.html`.
 
-![Swagger](docs/screenshots/swagger.png)
+![Swagger](https://raw.githubusercontent.com/t0mer/go-certi/main/docs/screenshots/swagger.png)
 
 ---
 
